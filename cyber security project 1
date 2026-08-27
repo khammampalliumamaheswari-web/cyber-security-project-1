@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Password Strength Analyzer</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
+            padding: 20px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 500px;
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+        }
+
+        h1 {
+            text-align: center;
+            color: #1e3c72;
+            margin-bottom: 10px;
+        }
+
+        .description {
+            text-align: center;
+            color: #666;
+            margin-bottom: 25px;
+        }
+
+        label {
+            font-weight: bold;
+            display: block;
+            margin-bottom: 8px;
+        }
+
+        .password-box {
+            display: flex;
+            gap: 8px;
+        }
+
+        input[type="password"],
+        input[type="text"] {
+            flex: 1;
+            padding: 13px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            outline: none;
+        }
+
+        input:focus {
+            border-color: #2a5298;
+        }
+
+        .toggle-btn {
+            padding: 0 15px;
+            border: none;
+            background: #2a5298;
+            color: white;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        .strength-container {
+            margin-top: 20px;
+        }
+
+        .strength-bar {
+            width: 100%;
+            height: 12px;
+            background: #ddd;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-top: 8px;
+        }
+
+        #strengthFill {
+            height: 100%;
+            width: 0%;
+            transition: 0.3s;
+        }
+
+        #strengthText {
+            text-align: center;
+            font-weight: bold;
+            margin-top: 8px;
+        }
+
+        .requirements {
+            margin-top: 20px;
+        }
+
+        .requirements p {
+            margin: 10px 0;
+            font-size: 15px;
+        }
+
+        .valid {
+            color: green;
+        }
+
+        .invalid {
+            color: red;
+        }
+
+        .suggestion {
+            margin-top: 25px;
+            padding: 15px;
+            background: #f2f6ff;
+            border-radius: 10px;
+        }
+
+        .suggestion h3 {
+            color: #1e3c72;
+            margin-bottom: 10px;
+        }
+
+        #suggestedPassword {
+            word-break: break-all;
+            background: white;
+            padding: 10px;
+            border-radius: 6px;
+            border: 1px solid #ddd;
+            margin-bottom: 10px;
+        }
+
+        button.generate {
+            width: 100%;
+            padding: 12px;
+            background: #1e3c72;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 15px;
+        }
+
+        button.generate:hover,
+        .toggle-btn:hover {
+            opacity: 0.9;
+        }
+
+        .security-note {
+            margin-top: 20px;
+            font-size: 12px;
+            color: #777;
+            text-align: center;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <h1>Password Strength Analyzer</h1>
+
+    <p class="description">
+        Check the strength and security of your password.
+    </p>
+
+    <label for="password">Enter Password</label>
+
+    <div class="password-box">
+        <input
+            type="password"
+            id="password"
+            placeholder="Enter your password"
+            oninput="analyzePassword()"
+        >
+
+        <button class="toggle-btn" onclick="togglePassword()">
+            Show
+        </button>
+    </div>
+
+    <div class="strength-container">
+
+        <label>Strength</label>
+
+        <div class="strength-bar">
+            <div id="strengthFill"></div>
+        </div>
+
+        <p id="strengthText">Enter a password</p>
+
+    </div>
+
+    <div class="requirements">
+
+        <p id="length">
+            ❌ At least 8 characters
+        </p>
+
+        <p id="uppercase">
+            ❌ Contains uppercase letter
+        </p>
+
+        <p id="lowercase">
+            ❌ Contains lowercase letter
+        </p>
+
+        <p id="number">
+            ❌ Contains a number
+        </p>
+
+        <p id="special">
+            ❌ Contains special character
+        </p>
+
+        <p id="unique">
+            ❌ Good character uniqueness
+        </p>
+
+    </div>
+
+    <div class="suggestion">
+
+        <h3>Suggested Strong Password</h3>
+
+        <div id="suggestedPassword">
+            Click the button to generate
+        </div>
+
+        <button class="generate" onclick="generatePassword()">
+            Generate Strong Password
+        </button>
+
+    </div>
+
+    <p class="security-note">
+        Your password is analyzed locally in your browser and is not sent anywhere.
+    </p>
+
+</div>
+
+
+<script>
+
+    // -------------------------------
+    // PASSWORD ANALYZER
+    // -------------------------------
+
+    function analyzePassword() {
+
+        const password = document.getElementById("password").value;
+
+        const lengthCheck = password.length >= 8;
+        const uppercaseCheck = /[A-Z]/.test(password);
+        const lowercaseCheck = /[a-z]/.test(password);
+        const numberCheck = /[0-9]/.test(password);
+        const specialCheck = /[^A-Za-z0-9]/.test(password);
+
+        // Calculate unique character percentage
+        let uniqueCharacters = new Set(password).size;
+
+        let uniquenessCheck = false;
+
+        if (password.length > 0) {
+            let uniquenessRatio =
+                uniqueCharacters / password.length;
+
+            uniquenessCheck = uniquenessRatio >= 0.7;
+        }
+
+        // Update requirement messages
+        updateRequirement("length", lengthCheck);
+        updateRequirement("uppercase", uppercaseCheck);
+        updateRequirement("lowercase", lowercaseCheck);
+        updateRequirement("number", numberCheck);
+        updateRequirement("special", specialCheck);
+        updateRequirement("unique", uniquenessCheck);
+
+        // Calculate score
+        let score = 0;
+
+        if (lengthCheck) score += 20;
+        if (password.length >= 12) score += 10;
+
+        if (uppercaseCheck) score += 15;
+        if (lowercaseCheck) score += 15;
+        if (numberCheck) score += 15;
+        if (specialCheck) score += 15;
+        if (uniquenessCheck) score += 10;
+
+        // Penalize repeated characters
+        if (hasRepeatedCharacters(password)) {
+            score -= 10;
+        }
+
+        // Penalize common passwords
+        if (isCommonPassword(password)) {
+            score = Math.min(score, 25);
+        }
+
+        score = Math.max(0, Math.min(100, score));
+
+        updateStrength(score);
+    }
+
+
+    // -------------------------------
+    // UPDATE REQUIREMENT
+    // -------------------------------
+
+    function updateRequirement(id, condition) {
+
+        const element = document.getElementById(id);
+
+        if (condition) {
+
+            element.classList.remove("invalid");
+            element.classList.add("valid");
+
+            element.innerHTML =
+                "✔ " + getRequirementText(id);
+
+        } else {
+
+            element.classList.remove("valid");
+            element.classList.add("invalid");
+
+            element.innerHTML =
+                "❌ " + getRequirementText(id);
+        }
+    }
+
+
+    function getRequirementText(id) {
+
+        const texts = {
+
+            length: "At least 8 characters",
+
+            uppercase: "Contains uppercase letter",
+
+            lowercase: "Contains lowercase letter",
+
+            number: "Contains a number",
+
+            special: "Contains special character",
+
+            unique: "Good character uniqueness"
+        };
+
+        return texts[id];
+    }
+
+
+    // -------------------------------
+    // CHECK REPEATED CHARACTERS
+    // -------------------------------
+
+    function hasRepeatedCharacters(password) {
+
+        if (password.length < 4) {
+            return false;
+        }
+
+        // Example: aaaa, 1111, xxxx
+        return /(.)\1\1/.test(password);
+    }
+
+
+    // -------------------------------
+    // COMMON PASSWORD CHECK
+    // -------------------------------
+
+    function isCommonPassword(password) {
+
+        const commonPasswords = [
+
+            "password",
+            "password123",
+            "123456",
+            "12345678",
+            "123456789",
+            "qwerty",
+            "qwerty123",
+            "admin",
+            "admin123",
+            "welcome",
+            "letmein",
+            "iloveyou",
+            "abc123",
+            "000000",
+            "111111"
+        ];
+
+        return commonPasswords.includes(
+            password.toLowerCase()
+        );
+    }
+
+
+    // -------------------------------
+    // UPDATE STRENGTH
+    // -------------------------------
+
+    function updateStrength(score) {
+
+        const fill =
+            document.getElementById("strengthFill");
+
+        const text =
+            document.getElementById("strengthText");
+
+        fill.style.width = score + "%";
+
+        if (score === 0) {
+
+            text.innerText = "Enter a password";
+
+        } else if (score < 40) {
+
+            text.innerText = "Weak";
+
+        } else if (score < 70) {
+
+            text.innerText = "Medium";
+
+        } else if (score < 90) {
+
+            text.innerText = "Strong";
+
+        } else {
+
+            text.innerText = "Very Strong";
+        }
+    }
+
+
+    // -------------------------------
+    // SHOW / HIDE PASSWORD
+    // -------------------------------
+
+    function togglePassword() {
+
+        const password =
+            document.getElementById("password");
+
+        const button =
+            document.querySelector(".toggle-btn");
+
+        if (password.type === "password") {
+
+            password.type = "text";
+            button.innerText = "Hide";
+
+        } else {
+
+            password.type = "password";
+            button.innerText = "Show";
+        }
+    }
+
+
+    // -------------------------------
+    // GENERATE STRONG PASSWORD
+    // -------------------------------
+
+    function generatePassword() {
+
+        const uppercase =
+            "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+
+        const lowercase =
+            "abcdefghijklmnopqrstuvwxyz";
+
+        const numbers =
+            "0123456789";
+
+        const special =
+            "!@#$%^&*()_+-=[]{}";
+
+        const all =
+            uppercase +
+            lowercase +
+            numbers +
+            special;
+
+        let password = "";
+
+        // Guarantee complexity
+        password += randomCharacter(uppercase);
+        password += randomCharacter(lowercase);
+        password += randomCharacter(numbers);
+        password += randomCharacter(special);
+
+        // Add remaining characters
+        for (let i = 4; i < 16; i++) {
+
+            password +=
+                randomCharacter(all);
+        }
+
+        // Shuffle password
+        password =
+            password.split("")
+            .sort(() => Math.random() - 0.5)
+            .join("");
+
+        document.getElementById(
+            "suggestedPassword"
+        ).innerText = password;
+    }
+
+
+    function randomCharacter(characters) {
+
+        const index =
+            Math.floor(
+                Math.random() * characters.length
+            );
+
+        return characters[index];
+    }
+
+</script>
+
+</body>
+</html>
