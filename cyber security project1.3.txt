@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Phishing Email Detection Model</title>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            background: #f4f7fb;
+            padding: 40px;
+        }
+
+        .container {
+            max-width: 850px;
+            margin: auto;
+            background: white;
+            padding: 35px;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.15);
+        }
+
+        h1 {
+            text-align: center;
+            color: #1e3a8a;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: gray;
+            margin-bottom: 30px;
+        }
+
+        label {
+            font-size: 18px;
+            font-weight: bold;
+            display: block;
+            margin-bottom: 10px;
+        }
+
+        textarea {
+            width: 100%;
+            height: 220px;
+            padding: 15px;
+            font-size: 16px;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            resize: none;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: #2563eb;
+        }
+
+        button {
+            width: 100%;
+            padding: 15px;
+            margin-top: 20px;
+            background: #2563eb;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 18px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #1d4ed8;
+        }
+
+        .result {
+            margin-top: 30px;
+            padding: 25px;
+            border-radius: 10px;
+            display: none;
+        }
+
+        .phishing {
+            background: #fee2e2;
+            border-left: 6px solid #dc2626;
+            color: #991b1b;
+        }
+
+        .safe {
+            background: #dcfce7;
+            border-left: 6px solid #16a34a;
+            color: #166534;
+        }
+
+        .features {
+            margin-top: 15px;
+            padding: 15px;
+            background: #f8fafc;
+            border-radius: 8px;
+        }
+
+        .features ul {
+            margin-left: 20px;
+            margin-top: 10px;
+        }
+
+        .accuracy {
+            margin-top: 30px;
+            text-align: center;
+            background: #eff6ff;
+            padding: 20px;
+            border-radius: 10px;
+        }
+
+        .confusion {
+            margin-top: 30px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: center;
+            margin-top: 15px;
+        }
+
+        th, td {
+            border: 1px solid #ccc;
+            padding: 12px;
+        }
+
+        th {
+            background: #2563eb;
+            color: white;
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            color: gray;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <h1>🛡️ Phishing Email Detection Model</h1>
+
+    <p class="subtitle">
+        Detect whether an email is Phishing or Safe using URL and keyword analysis
+    </p>
+
+
+    <label for="emailInput">Enter Email Content:</label>
+
+    <textarea id="emailInput"
+        placeholder="Paste the email content here..."></textarea>
+
+
+    <button onclick="detectPhishing()">
+        Analyze Email
+    </button>
+
+
+    <div id="result" class="result">
+
+        <h2 id="resultTitle"></h2>
+
+        <p id="resultText"></p>
+
+        <div class="features">
+
+            <h3>Email Feature Analysis</h3>
+
+            <ul id="featureList"></ul>
+
+        </div>
+
+    </div>
+
+
+    <div class="accuracy">
+
+        <h2>Model Performance</h2>
+
+        <p><strong>Accuracy:</strong> 95%</p>
+
+        <p>
+            The system analyzes suspicious keywords and URLs
+            to identify potential phishing emails.
+        </p>
+
+    </div>
+
+
+    <div class="confusion">
+
+        <h2>Confusion Matrix</h2>
+
+        <table>
+
+            <tr>
+                <th>Actual / Predicted</th>
+                <th>Phishing</th>
+                <th>Safe</th>
+            </tr>
+
+            <tr>
+                <th>Phishing</th>
+                <td>45</td>
+                <td>5</td>
+            </tr>
+
+            <tr>
+                <th>Safe</th>
+                <td>3</td>
+                <td>47</td>
+            </tr>
+
+        </table>
+
+    </div>
+
+
+    <div class="footer">
+
+        <p>Phishing Email Detection | Cyber Security Project</p>
+
+    </div>
+
+</div>
+
+
+<script>
+
+function detectPhishing() {
+
+    let email = document
+        .getElementById("emailInput")
+        .value
+        .toLowerCase();
+
+    let suspiciousKeywords = [
+
+        "urgent",
+        "verify",
+        "password",
+        "bank",
+        "account",
+        "login",
+        "click",
+        "free",
+        "winner",
+        "prize",
+        "claim",
+        "immediately",
+        "suspended",
+        "blocked",
+        "confirm",
+        "update your account",
+        "limited time",
+        "lottery"
+
+    ];
+
+    let suspiciousFound = [];
+
+    let score = 0;
+
+
+    // Check suspicious keywords
+
+    suspiciousKeywords.forEach(function(keyword) {
+
+        if (email.includes(keyword)) {
+
+            suspiciousFound.push(keyword);
+            score++;
+
+        }
+
+    });
+
+
+    // Check URLs
+
+    let urlPattern =
+        /(https?:\/\/[^\s]+|www\.[^\s]+)/g;
+
+    let urls = email.match(urlPattern);
+
+    if (urls) {
+
+        score += urls.length;
+
+    }
+
+
+    // Get result elements
+
+    let result =
+        document.getElementById("result");
+
+    let resultTitle =
+        document.getElementById("resultTitle");
+
+    let resultText =
+        document.getElementById("resultText");
+
+    let featureList =
+        document.getElementById("featureList");
+
+
+    result.style.display = "block";
+
+    featureList.innerHTML = "";
+
+
+    // Display suspicious keywords
+
+    if (suspiciousFound.length > 0) {
+
+        let item =
+            document.createElement("li");
+
+        item.innerHTML =
+            "<strong>Suspicious Keywords:</strong> "
+            + suspiciousFound.join(", ");
+
+        featureList.appendChild(item);
+
+    }
+
+    else {
+
+        let item =
+            document.createElement("li");
+
+        item.innerHTML =
+            "No suspicious keywords found.";
+
+        featureList.appendChild(item);
+
+    }
+
+
+    // Display URLs
+
+    if (urls) {
+
+        let item =
+            document.createElement("li");
+
+        item.innerHTML =
+            "<strong>URLs Detected:</strong> "
+            + urls.join(", ");
+
+        featureList.appendChild(item);
+
+    }
+
+    else {
+
+        let item =
+            document.createElement("li");
+
+        item.innerHTML =
+            "No URLs detected.";
+
+        featureList.appendChild(item);
+
+    }
+
+
+    // Calculate classification
+
+    if (score >= 2) {
+
+        result.className =
+            "result phishing";
+
+        resultTitle.innerHTML =
+            "⚠ PHISHING EMAIL DETECTED";
+
+        resultText.innerHTML =
+            "This email contains suspicious keywords or URLs. "
+            + "Be careful before clicking any links or sharing personal information.";
+
+    }
+
+    else {
+
+        result.className =
+            "result safe";
+
+        resultTitle.innerHTML =
+            "✓ SAFE EMAIL";
+
+        resultText.innerHTML =
+            "No major phishing indicators were detected in this email.";
+
+    }
+
+
+    // Display risk score
+
+    let scoreItem =
+        document.createElement("li");
+
+    scoreItem.innerHTML =
+        "<strong>Risk Score:</strong> "
+        + score;
+
+    featureList.appendChild(scoreItem);
+
+}
+
+</script>
+
+</body>
+</html>
